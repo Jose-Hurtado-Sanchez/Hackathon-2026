@@ -1,7 +1,9 @@
 # Example file showing a basic pygame "game loop"
 import pygame
 import screen1
-import player 
+from player import Player 
+import dorm
+
 
 # pygame setup
 pygame.init()
@@ -11,7 +13,9 @@ clock = pygame.time.Clock()
 running = True
 title_font = pygame.font.SysFont("Consolas", 60) # font type fob bigger text goes here 
 sub_title_font = pygame.font.SysFont("Consolas", 30) # font type for smaller text here goes here 
+small_text_font = pygame.font.SysFont("Consolas", 10) # font type for even smaller text here goes here 
 
+User = Player()
 
 # colors
 CRIMSON = (220, 20, 60)
@@ -33,6 +37,17 @@ press_rect = press_to_start.get_rect(midtop=(screen_rectangle.centerx, center_te
 
 goScreen1 = False
 
+labels = ["Computer Science", "Buisness", "Nursing", "Kinesiology", "Liberal Arts"]
+buttons = {}
+x = 225
+start_y = 300
+w, h = 220, 60
+gap = 20
+
+for i, label in enumerate(labels):
+    y = start_y + i * (h + gap) #each button gets a unique coordinate
+    buttons[label] = pygame.Rect(x, y, w ,h)
+
 while running:
     #---  ALL EVENTS 
     # poll for events
@@ -43,11 +58,23 @@ while running:
 
     #--button events--
     mouse_position = pygame.mouse.get_pos() #mouse position
-            
+
+    #checks to see if the user clicks down anywhere on the screen and then moves onto the intro screen    
     if event.type == pygame.MOUSEBUTTONDOWN and screen_state == "starting_screen":
         if full_button.collidepoint(event.pos):
             screen_state = "screen_1"
 
+    #user clicks down and if it is inside the button it checks the label and then to the new dorm screen
+    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and screen_state == "screen_1":
+        for label, rect in buttons.items():
+            if rect.collidepoint(event.pos):
+                User.major = label
+                User.boostByMajor() #gives boost on major chosen 
+                screen_state = "dorm"
+                
+                
+
+            
 
     #--screen fill--
     # fill the screen with a color to wipe away anything from last frame
@@ -61,16 +88,29 @@ while running:
             screen.blit(press_to_start, press_rect)
 
     if screen_state == "screen_1" :
-        screen1.draw_screen1(screen)
+        screen1.draw_screen1(screen) 
+        for label, rect in buttons.items(): #loops through each button
+            pygame.draw.rect(screen, "dark red", rect)
+
+            text_surf = small_text_font.render(label,True, "white") #renders the button text
+            text_rect = text_surf.get_rect(center = rect.center) #creates a rectangle
+            screen.blit (text_surf, text_rect)
+
+    if screen_state == "dorm" :
+        screen.fill("dark grey")
+        dorm.draw_dorm_screen(screen,User)
     
-    # RENDER YOUR GAME HERE
+    pygame.display.flip()
+    clock.tick(60)
+
+    
+    
 
     # flip() the display to put your work on screen
     pygame.display.flip()
 
     clock.tick(60)  # limits FPS to 60
 
-    if goScreen1: 
-        screen1.run(screen,clock)
+  
 
 pygame.quit()
